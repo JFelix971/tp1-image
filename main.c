@@ -75,7 +75,7 @@ void img_binaire(struct fichierimage *fichier)
 			{
 				fichier->image[i][j].r = 255;
 				fichier->image[i][j].g = 255;
-				fichier->image[i][j].b = 255;nbpix++;
+				fichier->image[i][j].b = 255;
 			}
 			else
 			{
@@ -86,62 +86,96 @@ void img_binaire(struct fichierimage *fichier)
 			}
 		}
 	}
-printf(" nb pix blanc = %d \n",nbpix);
 	enregistrer("image_binaire.bmp",fichier);
 	free(fichier);
 }
 
 void erosion (struct fichierimage * fichier)
 {
-	int i, j ,nbpix=0;
-struct fichierimage *buff;
-buff=nouveau(fichier->entetebmp.hauteur,fichier->entetebmp.largeur); 
+	int i, j ;
+	struct fichierimage *buff;
+	buff=nouveau(fichier->entetebmp.hauteur,fichier->entetebmp.largeur); 
 
-	for(i=fichier->entetebmp.hauteur-1; i>1; i--)
+	for(i=1; i<fichier->entetebmp.hauteur-1; i++)
 	{
 		for(j=1; j<fichier->entetebmp.largeur-1; j++)
 		{
 			if( fichier->image[i][j].r > 0)
-			{nbpix++;
+			{
 				//On utilise un filtre manuel pour eroder l image , on verifie chaque voisin
 				if( (fichier->image[i-1][j-1].r || fichier->image[i-1][j].r || fichier->image[i-1][j+1].r ||
 				     fichier->image[i][j-1].r || fichier->image[i][j+1].r || fichier->image[i+1][j-1].r ||
 				     fichier->image[i+1][j].r || fichier->image[i+1][j+1].r ) == 0) 
-				{printf("dans le if");
-					/*fichier->image[i][j].r = 0;
-					fichier->image[i][j].g = 0;
-					fichier->image[i][j].b = 0;*/
+				{
 					buff->image[i][j].r = 0;
 					buff->image[i][j].g = 0;
 					buff->image[i][j].b = 0;
 				}
-else
-{
-	/*fichier->image[i][j].r=255;
-	fichier->image[i][j].g=255;
-	fichier->image[i][j].b=255;*/
-	buff->image[i][j].r=255;
-	buff->image[i][j].g=255;
-	buff->image[i][j].b=255;
-}
+				else
+				{
+
+					buff->image[i][j].r=255;
+					buff->image[i][j].g=255;
+					buff->image[i][j].b=255;
+				}
 			}
 		}
 	}
-printf("nb pix blanc = %d \n",nbpix);
+
 	enregistrer("image_erode.bmp",fichier);
 	free(fichier);	
 }
 
-int minVoisin(int tab[])
+void dilatation (struct fichierimage * fichier)
 {
-	int i, min=0;
+	int i, j ;
+	struct fichierimage *buff;
+	buff=nouveau(fichier->entetebmp.hauteur,fichier->entetebmp.largeur); 
+
+	for(i=1; i<fichier->entetebmp.hauteur-1; i++)
+	{
+		for(j=1; j<fichier->entetebmp.largeur-1; j++)
+		{
+			if( fichier->image[i][j].r > 0)
+			{
+				//On utilise un filtre manuel pour eroder l image , on verifie chaque voisin
+				if( (fichier->image[i-1][j-1].r || fichier->image[i-1][j].r || fichier->image[i-1][j+1].r ||
+				     fichier->image[i][j-1].r || fichier->image[i][j+1].r || fichier->image[i+1][j-1].r ||
+				     fichier->image[i+1][j].r || fichier->image[i+1][j+1].r ) > 0) 
+				{
+					buff->image[i][j].r = 255;
+					buff->image[i][j].g = 255;
+					buff->image[i][j].b = 255;
+				}
+				else
+				{
+
+					buff->image[i][j].r=0;
+					buff->image[i][j].g=0;
+					buff->image[i][j].b=0;
+				}
+			}
+		}
+	}
+
+	enregistrer("image_dilate.bmp",fichier);
+
+	free(fichier);	
+}
+
+int minVoisin(int *tab)
+{
+	int i, min=0, max=0;
+	min = max = tab[0];
 	for (i=0;i<8;i++)
 	{
 		if (tab[i] < min)
 		{
 			min = tab[i];
 		}
+		if(tab[i]>max){ max= tab[i];}
 	}
+
 	return min;
 }
 
@@ -153,22 +187,23 @@ void etiquetage(struct fichierimage* fichier)
 	int voisins[8]={0,0,0,0,0,0,0,0};
 	int minvois = 0; 
 	int T[fichier->entetebmp.hauteur][fichier->entetebmp.largeur]	;
-	printf("avant T");
+
 	for(i=0;i<fichier->entetebmp.hauteur;i++)
 		for(j=0;j<fichier->entetebmp.largeur;j++)
-			T[i][j]=0;	
+			T[i][j]=fichier->image[i][j].r;
+
+
 	while( test == 1)
 	{
 		test = 0;
-		printf("dans le tant que \n");
 		for(i=1; i<fichier->entetebmp.hauteur-1; i++)
-		{//printf("dans le for boucle i\n");
+		{
 			for(j=1; j<fichier->entetebmp.largeur-1; j++)
-			{	//printf("dans le for boucle j\n");//on verfiei qu 1 pixel est allume dans l image de base
+			{
 				if(fichier->image[i][j].r > 0)
-				{	//printf("dans le if boucle i > 0\n");//on regarde si dans l image buff ce pixel possede une etiquette 
+				{	//on regarde si dans l image buff ce pixel possede une etiquette 
 					if(T[i][j] == 0)
-					{//printf("dans le if boucle T[i][j]\n");
+					{
 						voisins[0]=T[i-1][j-1];
 						voisins[1]=T[i-1][j];
 						voisins[2]=T[i-1][j+1];						     
@@ -176,24 +211,34 @@ void etiquetage(struct fichierimage* fichier)
 						voisins[4]=T[i][j+1];
 						voisins[5]=T[i+1][j-1];
 						voisins[6]=T[i+1][j];
-						voisins[7]=T[i+1][j+1]; 
+						voisins[7]=T[i+1][j+1];
+						minvois=minVoisin(voisins); printf(" plus petit voisin de [%d,%d] est %d \n",i,j,minvois);
 						//On utilise un filtre manuel pour regarder voisin du pixel i,j
-						if( minvois=minVoisin(voisins) == 0) 
+						if(  minvois == 0) 
 						{	
 							T[i][j] = etiquette;
-							etiquette += 1;printf("min voisin= %d etiquette : %d \n",minvois,etiquette);
+							etiquette += 1;//printf("min voisin= %d etiquette : %d \n",minvois,etiquette);
 						}
 						else
 						{
-							T[i][j]=minvois;
+							T[i][j]=minvois;printf("ici \n");
 						}
-						test+=1;printf("test = %d \n",test);
+						test+=1;
 					}
 					else
-					{
+					{printf("ici 2 \n");
+						voisins[0]=T[i-1][j-1];
+						voisins[1]=T[i-1][j];
+						voisins[2]=T[i-1][j+1];						     
+						voisins[3]=T[i][j-1];
+						voisins[4]=T[i][j+1];
+						voisins[5]=T[i+1][j-1];
+						voisins[6]=T[i+1][j];
+						voisins[7]=T[i+1][j+1];
+						minvois=minVoisin(voisins);
 						if(T[i][j] != (minvois=minVoisin(voisins)))
-						{
-							T[i][j]=minvois;
+						{//printf("ici iffff \n");
+							T[i][j]=minvois;printf("ici iffff min vois %d\n",minvois);
 							test=1;
 						}
 					}//finsinon
@@ -246,16 +291,7 @@ void etiquetage(struct fichierimage* fichier)
 		}//finpour1*/
 	}//fintantque
 
-printf("\nTableau T \n");
-for(i=0;i<10; i++)
-{
-	for(j=0;j<10; j++)
-	{
-		printf(" %d ",T[i][j]);
-	}
-	printf(" \n ");
-}
-printf("\n etiquette = %d",etiquette);
+//printf("\n etiquette = %d",etiquette);
 }
 
 int main()
@@ -280,9 +316,10 @@ img_binaire(fichier);
 fichier=charger("image_binaire.bmp");
 erosion(fichier);
 
-/*for(i=0;i<1000;i++)
-	{fichier=charger("image_erode.bmp"); erosion(fichier);}*/
+fichier =  charger("image_binaire.bmp");
+dilatation(fichier);
+
 fichier=charger("image_binaire.bmp");
-//etiquetage(fichier);
+etiquetage(fichier);
 
 }
