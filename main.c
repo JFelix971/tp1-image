@@ -21,17 +21,23 @@
 // permet de creer une image en memoire de largeur arg1 et de hauteur arg2, la fonction 
 // retourne un pointeur de type : struct fichierimage *
 //------------------------------------------------------------------------------
-void ouvrir_image(int longueur, int largeur, char nom_image[])
+void ouvrir_image(int longueur, int largeur, char nom_image[], char nom_image2[])
 {
 
-    SDL_Surface *ecran = NULL, *imageDeFond = NULL;
+    SDL_Surface *ecran = NULL, *imageDeFond = NULL, *imageDeFond2 = NULL;
 
     SDL_Rect positionFond;
+    SDL_Rect positionFond2;
+    
 
 
     positionFond.x = 0;
 
     positionFond.y = 0;
+    
+    positionFond2.x = largeur;
+
+    positionFond2.y = 0;
 
 
     SDL_Init(SDL_INIT_VIDEO);
@@ -39,13 +45,14 @@ void ouvrir_image(int longueur, int largeur, char nom_image[])
 
     /* Chargement de l'icône AVANT SDL_SetVideoMode */
 
-    ecran = SDL_SetVideoMode(largeur, longueur, 32, SDL_HWSURFACE);
+    ecran = SDL_SetVideoMode(largeur*2, longueur*2, 32, SDL_HWSURFACE);
     SDL_WM_SetCaption("Chargement d'images en SDL", NULL);
 
 
     imageDeFond = SDL_LoadBMP(nom_image);
+    imageDeFond2 = SDL_LoadBMP(nom_image2);
     SDL_BlitSurface(imageDeFond, NULL, ecran, &positionFond);
-
+    SDL_BlitSurface(imageDeFond2, NULL, ecran, &positionFond2);
 
     SDL_Flip(ecran);
 
@@ -53,7 +60,7 @@ void ouvrir_image(int longueur, int largeur, char nom_image[])
 
 
     SDL_FreeSurface(imageDeFond);
-
+    SDL_FreeSurface(imageDeFond2);
     SDL_Quit();
 
 }
@@ -143,7 +150,7 @@ void img_binaire(struct fichierimage *fichier)
 	}
 	enregistrer("image_binaire.bmp",fichier);
 	supprimer(fichier);
-	ouvrir_image(fichier->entetebmp.hauteur,fichier->entetebmp.largeur,"image_binaire.bmp");	
+	//ouvrir_image(fichier->entetebmp.hauteur,fichier->entetebmp.largeur,"image_binaire.bmp");	
 }
 
 void erosion (struct fichierimage * fichier)
@@ -160,9 +167,9 @@ void erosion (struct fichierimage * fichier)
 		{
 			if( fichier->image[i][j].r > 0)
 			{
-				buff->image[i][j].r=255;
-				buff->image[i][j].g=255;
-				buff->image[i][j].b=255;
+				//buff->image[i][j].r=255;
+				//buff->image[i][j].g=255;
+				//buff->image[i][j].b=255;
 				voisins[0]=fichier->image[i-1][j-1].r; 
 				voisins[1]=fichier->image[i-1][j].r;
 				voisins[2]=fichier->image[i-1][j+1].r;		     
@@ -172,20 +179,21 @@ void erosion (struct fichierimage * fichier)
 				voisins[6]=fichier->image[i+1][j].r;
 				voisins[7]=fichier->image[i+1][j+1].r;
 				voisins[8]=fichier->image[i][j].r;
-				minvois=minVoisin(voisins); printf("pixel i,j : %d , %d  --> minvois = %d\n",i,j,minvois);
+				minvois=minVoisin(voisins);
 				//On utilise un filtre manuel pour eroder l image , on verifie chaque voisin
 				if(minvois==0) 
 				{
 					buff->image[i][j].r = 0;
 					buff->image[i][j].g = 0;
 					buff->image[i][j].b = 0;
+					printf("pix off \n");
 				}
-				/*else
+				else
 				{
 					buff->image[i][j].r=255;
 					buff->image[i][j].g=255;
 					buff->image[i][j].b=255;	
-				}*/
+				}
 
 			}
 		}
@@ -193,7 +201,7 @@ void erosion (struct fichierimage * fichier)
 
 	enregistrer("image_erode.bmp",buff);
 	supprimer(buff);
-	ouvrir_image(fichier->entetebmp.hauteur,fichier->entetebmp.largeur,"image_erode.bmp");		
+	//ouvrir_image(fichier->entetebmp.hauteur,fichier->entetebmp.largeur,"image_erode.bmp");		
 }
 
 void dilatation (struct fichierimage * fichier)
@@ -230,7 +238,7 @@ void dilatation (struct fichierimage * fichier)
 
 	enregistrer("image_dilate.bmp",buff);
 	free(buff);
-	ouvrir_image(fichier->entetebmp.hauteur,fichier->entetebmp.largeur,"image_dilate.bmp");			
+	//ouvrir_image(fichier->entetebmp.hauteur,fichier->entetebmp.largeur,"image_dilate.bmp");			
 }
 
 void etiquetage(struct fichierimage* fichier)/*OK*/
@@ -307,7 +315,7 @@ void etiquetage(struct fichierimage* fichier)/*OK*/
 		}
 	enregistrer("image_etique.bmp",buff);
 	supprimer(buff);
-	ouvrir_image(fichier->entetebmp.hauteur,fichier->entetebmp.largeur,"image_etique.bmp");		
+	//ouvrir_image(fichier->entetebmp.hauteur,fichier->entetebmp.largeur,"image_etique.bmp");		
 }
 
 int main()
@@ -331,7 +339,7 @@ img_binaire(fichier);
 //Traitement image binaire to erode
 fichier=charger("image_binaire.bmp");
 erosion(fichier);
-
+	ouvrir_image(fichier->entetebmp.hauteur,fichier->entetebmp.largeur,"image_binaire.bmp","image_etique.bmp");		
 /*fichier =  charger("image_binaire.bmp");
 dilatation(fichier);*/
 
