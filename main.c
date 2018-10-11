@@ -201,7 +201,6 @@ void dilatation (struct fichierimage * fichier)
 	struct fichierimage *buff;
 	buff=nouveau(fichier->entetebmp.largeur,fichier->entetebmp.hauteur); 
 	
-	//buff=clone(fichier);
 	for(j=1; j<fichier->entetebmp.hauteur-1; j++)
 	{
 		for(i=1; i<fichier->entetebmp.largeur-1; i++)
