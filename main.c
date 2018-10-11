@@ -155,21 +155,18 @@ void img_binaire(struct fichierimage *fichier)
 
 void erosion (struct fichierimage * fichier)
 {
-	int i, j, minvois=0;
+	int i, j, k, minvois=0;
 	int voisins[9]={0,0,0,0,0,0,0,0,0};
 	
 	struct fichierimage *buff;
-	buff=nouveau(fichier->entetebmp.largeur,fichier->entetebmp.hauteur); 
-
+	//buff=nouveau(fichier->entetebmp.largeur,fichier->entetebmp.hauteur); 
+	buff=clone(fichier);
 	for(j=1; j<fichier->entetebmp.hauteur-1; j++)
 	{
 		for(i=1; i<fichier->entetebmp.largeur-1; i++)
 		{
 			if( fichier->image[i][j].r > 0)
 			{
-				//buff->image[i][j].r=255;
-				//buff->image[i][j].g=255;
-				//buff->image[i][j].b=255;
 				voisins[0]=fichier->image[i-1][j-1].r; 
 				voisins[1]=fichier->image[i-1][j].r;
 				voisins[2]=fichier->image[i-1][j+1].r;		     
@@ -179,20 +176,12 @@ void erosion (struct fichierimage * fichier)
 				voisins[6]=fichier->image[i+1][j].r;
 				voisins[7]=fichier->image[i+1][j+1].r;
 				voisins[8]=fichier->image[i][j].r;
-				minvois=minVoisin(voisins);
 				//On utilise un filtre manuel pour eroder l image , on verifie chaque voisin
-				if(minvois==0) 
+				for(k=0;voisins[k] == 0;k++)
 				{
 					buff->image[i][j].r = 0;
 					buff->image[i][j].g = 0;
-					buff->image[i][j].b = 0;
-					printf("pix off \n");
-				}
-				else
-				{
-					buff->image[i][j].r=255;
-					buff->image[i][j].g=255;
-					buff->image[i][j].b=255;	
+					buff->image[i][j].b = 0;			
 				}
 
 			}
@@ -339,7 +328,7 @@ img_binaire(fichier);
 //Traitement image binaire to erode
 fichier=charger("image_binaire.bmp");
 erosion(fichier);
-	ouvrir_image(fichier->entetebmp.hauteur,fichier->entetebmp.largeur,"image_binaire.bmp","image_etique.bmp");		
+	ouvrir_image(fichier->entetebmp.hauteur,fichier->entetebmp.largeur,"image_binaire.bmp","image_erode.bmp");		
 /*fichier =  charger("image_binaire.bmp");
 dilatation(fichier);*/
 
