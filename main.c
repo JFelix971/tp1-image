@@ -1,7 +1,8 @@
 #include "image.h" 
 #include<stdio.h>
 #include<stdlib.h>
-
+#include<string.h>
+#include <SDL/SDL_image.h>
 //------------------------------------------------------------------------------
 // Code source pour le projet d'UE035
 // description : (les fonctions sont dÃ©finit dans image.h)
@@ -20,7 +21,58 @@
 // permet de creer une image en memoire de largeur arg1 et de hauteur arg2, la fonction 
 // retourne un pointeur de type : struct fichierimage *
 //------------------------------------------------------------------------------
- 
+void ouvrir_image(int longueur, int largeur, char nom_image[])
+{
+
+    SDL_Surface *ecran = NULL, *imageDeFond = NULL;
+
+    SDL_Rect positionFond;
+
+
+    positionFond.x = 0;
+
+    positionFond.y = 0;
+
+
+    SDL_Init(SDL_INIT_VIDEO);
+
+
+    /* Chargement de l'icône AVANT SDL_SetVideoMode */
+
+    ecran = SDL_SetVideoMode(largeur, longueur, 32, SDL_HWSURFACE);
+    SDL_WM_SetCaption("Chargement d'images en SDL", NULL);
+
+
+    imageDeFond = SDL_LoadBMP(nom_image);
+    SDL_BlitSurface(imageDeFond, NULL, ecran, &positionFond);
+
+
+    SDL_Flip(ecran);
+
+    pause();
+
+
+    SDL_FreeSurface(imageDeFond);
+
+    SDL_Quit();
+
+}
+
+int minVoisin(int *tab)
+{
+	int i, min=0;
+	for (i=0;i<9;i++)
+	{
+		if (tab[i] < min && tab[i] > 0 || min ==0)
+		{
+			min = tab[i];
+		}
+
+	}
+
+	return min;
+}
+
 
 void img_nvgris(struct fichierimage *fichier)
 {
@@ -38,7 +90,8 @@ void img_nvgris(struct fichierimage *fichier)
 	nvgris=0;
 	}
 	enregistrer("image_nvgris.bmp",fichier);
-	supprimer(fichier);	
+	supprimer(fichier);
+	//ouvrir_image(fichier->entetebmp.hauteur,fichier->entetebmp.largeur,"image_nvgris.bmp");	
 }
 
 void img_binaire(struct fichierimage *fichier)
@@ -90,13 +143,16 @@ void img_binaire(struct fichierimage *fichier)
 	}
 	enregistrer("image_binaire.bmp",fichier);
 	supprimer(fichier);
+	ouvrir_image(fichier->entetebmp.hauteur,fichier->entetebmp.largeur,"image_binaire.bmp");	
 }
 
 void erosion (struct fichierimage * fichier)
 {
-	int i, j ;
+	int i, j, minvois=0;
+	int voisins[9]={0,0,0,0,0,0,0,0,0};
+	
 	struct fichierimage *buff;
-	buff=nouveau(fichier->entetebmp.hauteur,fichier->entetebmp.largeur); 
+	buff=nouveau(fichier->entetebmp.largeur,fichier->entetebmp.hauteur); 
 
 	for(j=1; j<fichier->entetebmp.hauteur-1; j++)
 	{
@@ -104,33 +160,51 @@ void erosion (struct fichierimage * fichier)
 		{
 			if( fichier->image[i][j].r > 0)
 			{
+				buff->image[i][j].r=255;
+				buff->image[i][j].g=255;
+				buff->image[i][j].b=255;
+				voisins[0]=fichier->image[i-1][j-1].r; 
+				voisins[1]=fichier->image[i-1][j].r;
+				voisins[2]=fichier->image[i-1][j+1].r;		     
+				voisins[3]=fichier->image[i][j-1].r;
+				voisins[4]=fichier->image[i][j+1].r;
+				voisins[5]=fichier->image[i+1][j-1].r;
+				voisins[6]=fichier->image[i+1][j].r;
+				voisins[7]=fichier->image[i+1][j+1].r;
+				voisins[8]=fichier->image[i][j].r;
+				minvois=minVoisin(voisins); printf("pixel i,j : %d , %d  --> minvois = %d\n",i,j,minvois);
 				//On utilise un filtre manuel pour eroder l image , on verifie chaque voisin
-				if( (fichier->image[i-1][j-1].r || fichier->image[i-1][j].r || fichier->image[i-1][j+1].r ||
-				     fichier->image[i][j-1].r || fichier->image[i][j+1].r || fichier->image[i+1][j-1].r ||
-				     fichier->image[i+1][j].r || fichier->image[i+1][j+1].r ) == 0) 
+				if(minvois==0) 
 				{
 					buff->image[i][j].r = 0;
 					buff->image[i][j].g = 0;
 					buff->image[i][j].b = 0;
 				}
+				/*else
+				{
+					buff->image[i][j].r=255;
+					buff->image[i][j].g=255;
+					buff->image[i][j].b=255;	
+				}*/
 
 			}
 		}
 	}
 
 	enregistrer("image_erode.bmp",buff);
-	supprimer(buff);	
+	supprimer(buff);
+	ouvrir_image(fichier->entetebmp.hauteur,fichier->entetebmp.largeur,"image_erode.bmp");		
 }
 
 void dilatation (struct fichierimage * fichier)
 {
 	int i, j ;
 	struct fichierimage *buff;
-	buff=nouveau(fichier->entetebmp.hauteur,fichier->entetebmp.largeur); 
+	buff=nouveau(fichier->entetebmp.largeur,fichier->entetebmp.hauteur); 
 
-	for(i=1; i<fichier->entetebmp.hauteur-1; i++)
+	for(j=1; j<fichier->entetebmp.hauteur-1; j++)
 	{
-		for(j=1; j<fichier->entetebmp.largeur-1; j++)
+		for(i=1; i<fichier->entetebmp.largeur-1; i++)
 		{
 			if( fichier->image[i][j].r > 0)
 			{
@@ -154,27 +228,12 @@ void dilatation (struct fichierimage * fichier)
 		}
 	}
 
-	enregistrer("image_dilate.bmp",fichier);
-
-	free(fichier);	
+	enregistrer("image_dilate.bmp",buff);
+	free(buff);
+	ouvrir_image(fichier->entetebmp.hauteur,fichier->entetebmp.largeur,"image_dilate.bmp");			
 }
 
-int minVoisin(int *tab)
-{
-	int i, min=0;
-	for (i=0;i<9;i++)
-	{
-		if (tab[i] < min && tab[i] > 0 || min ==0)
-		{
-			min = tab[i];
-		}
-
-	}
-
-	return min;
-}
-
-void etiquetage(struct fichierimage* fichier)
+void etiquetage(struct fichierimage* fichier)/*OK*/
 {
 	int i, j, t;
 	int etiquette = 1 ;
@@ -208,7 +267,7 @@ void etiquetage(struct fichierimage* fichier)
 					voisins[6]=T[i+1][j];
 					voisins[7]=T[i+1][j+1];
 					voisins[8]=T[i][j] == 0 ? etiquette : T[i][j];
-					minvois=T[i][j]=minVoisin(voisins); printf(" plus petit voisin de [%d,%d] est %d \n",i,j,minvois);
+					minvois=T[i][j]=minVoisin(voisins);
 					etiquette += T[i][j] == etiquette; 
 				}//finsi
 			}//fin pour2
@@ -230,13 +289,13 @@ void etiquetage(struct fichierimage* fichier)
 					voisins[6]=T[i+1][j];
 					voisins[7]=T[i+1][j+1];
 					voisins[8]=T[i][j] == 0 ? etiquette : T[i][j];
-					minvois=T[i][j]=minVoisin(voisins); printf(" plus petit voisin de [%d,%d] est %d \n",i,j,minvois);
+					minvois=T[i][j]=minVoisin(voisins);
 					etiquette += T[i][j] == etiquette; 
 				}//finsi
 			}//fin pour2
 		}//finpour1
 	}//fintantque
-
+	//Affichage de l image etiquetter en mettant des couleurs correspondant a chaque etiquette
 	for(j=0;j<fichier->entetebmp.hauteur;j++)
 		for(i=0;i<fichier->entetebmp.largeur;i++)
 		{
@@ -248,6 +307,7 @@ void etiquetage(struct fichierimage* fichier)
 		}
 	enregistrer("image_etique.bmp",buff);
 	supprimer(buff);
+	ouvrir_image(fichier->entetebmp.hauteur,fichier->entetebmp.largeur,"image_etique.bmp");		
 }
 
 int main()
@@ -255,28 +315,28 @@ int main()
 // variable permettant le parcours d'une image
 int i,j;
 
-// exemple de dÃ©claration d'un pointeur image
+// exemple de déclaration d'un pointeur image
 struct fichierimage *fichier=NULL;
 
 // exemple pour effectuer un copier coller
 
 //Traitement image niv gris
-fichier=charger("image.bmp");
-img_nvgris(fichier);
+//fichier=charger("image.bmp");
+//img_nvgris(fichier);
 
 //Traitement image couleur a binaire
 fichier=charger("image.bmp");
 img_binaire(fichier);
 
 //Traitement image binaire to erode
-/*fichier=charger("image_binaire.bmp");
-erosion(fichier);*/
+fichier=charger("image_binaire.bmp");
+erosion(fichier);
 
 /*fichier =  charger("image_binaire.bmp");
 dilatation(fichier);*/
 
-fichier=charger("image_binaire.bmp");
-etiquetage(fichier);
+//fichier=charger("image_binaire.bmp");
+//etiquetage(fichier);
 
 }
 
