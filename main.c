@@ -3,6 +3,10 @@
 #include<stdlib.h>
 #include<string.h>
 #include <SDL/SDL_image.h>
+
+/*int Etiquette=0;
+int nb_eti[3]={0,0,0};
+int nb_action=0;*/
 //------------------------------------------------------------------------------
 // Code source pour le projet d'UE035
 // description : (les fonctions sont dÃ©finit dans image.h)
@@ -223,7 +227,7 @@ void dilatation (struct fichierimage * fichier)
 
 }
 
-void etiquetage(struct fichierimage* fichier)/*OK*/
+int etiquetage(struct fichierimage* fichier)/*OK*/
 {
 	int i, j, t;
 	int etiquette = 1 ;
@@ -280,7 +284,7 @@ void etiquetage(struct fichierimage* fichier)/*OK*/
 					voisins[7]=T[i+1][j+1];
 					voisins[8]=T[i][j] == 0 ? etiquette : T[i][j];
 					minvois=T[i][j]=minVoisin(voisins);
-					etiquette += T[i][j] == etiquette; 
+					etiquette += T[i][j] == etiquette;
 				}//finsi
 			}//fin pour2
 		}//finpour1
@@ -297,13 +301,24 @@ void etiquetage(struct fichierimage* fichier)/*OK*/
 		}
 	enregistrer("image_etique.bmp",buff);
 	supprimer(buff);
-	//ouvrir_image(fichier->entetebmp.hauteur,fichier->entetebmp.largeur,"image_etique.bmp");		
+	return etiquette;
 }
+
+/*void amelioration_eti(struct fichierimage *fichier)
+{
+	int i, j;
+	struct fichierimage *buff;
+	buff=clone(fichier);
+	
+}*/
 
 int main()
 {
 // variable permettant le parcours d'une image
-int i,j;
+int i,j,k;
+int etiquette=0;
+int nb_eti[3]={rand()%256,rand()%256,rand()%256};
+int nb_action=0;
 
 // exemple de déclaration d'un pointeur image
 struct fichierimage *fichier=NULL;
@@ -311,28 +326,42 @@ struct fichierimage *fichier=NULL;
 // exemple pour effectuer un copier coller
 
 //Traitement image niv gris
-//fichier=charger("image.bmp");
-//img_nvgris(fichier);
+fichier=charger("image.bmp");
+img_nvgris(fichier);
 
 //Traitement image couleur a binaire
 fichier=charger("image.bmp");
 img_binaire(fichier);
 
 //Traitement image binaire to erode
-fichier=charger("image_binaire.bmp");
-erosion(fichier);
+/*fichier=charger("image_binaire.bmp");
+erosion(fichier);*/
 
-fichier =  charger("image_binaire.bmp");
-dilatation(fichier);
-/*fichier =  charger("image_dilate.bmp");
-dilatation(fichier);
-fichier =  charger("image_dilate.bmp");
+/*fichier =  charger("image_binaire.bmp");
 dilatation(fichier);*/
-ouvrir_image(fichier->entetebmp.hauteur,fichier->entetebmp.largeur,"image_binaire.bmp","image_dilate.bmp");		
 
-//fichier=charger("image_binaire.bmp");
-//etiquetage(fichier);
+//ouvrir_image(fichier->entetebmp.hauteur,fichier->entetebmp.largeur,"image_binaire.bmp","image_dilate.bmp");		
 
+/*fichier=charger("image_binaire.bmp");
+etiquette=etiquetage(fichier);
+nb_eti[0]=etiquette;*/
+
+fichier=charger("image_binaire.bmp");
+
+while(nb_eti[0]!=nb_eti[1] && nb_eti[1]!=nb_eti[2])
+{
+	nb_eti[nb_action%3]=etiquetage(fichier);
+	erosion(fichier);
+	nb_action++;
+	fichier=charger("image_erode.bmp");
+	printf(" nb action = %d\n",nb_action);
+}
+for(k=0;k<nb_action-7;k++)
+{
+	dilatation(fichier);
+	fichier=charger("image_dilate.bmp");
+}
+ouvrir_image(fichier->entetebmp.hauteur,fichier->entetebmp.largeur,"image_dilate.bmp","image_erode.bmp");	
 }
 
 
